@@ -1,11 +1,8 @@
 #
 # This is a Shiny web application. You can run the application by clicking
 # the 'Run App' button above.
-#
-# Find out more about building applications with Shiny here:
-#
-#    http://shiny.rstudio.com/
-#
+# Big plans:
+# Add group possibilities (persona types, software versions, competitive analysis... etc)
 
 library(shiny)
 library(tidyverse)
@@ -475,7 +472,26 @@ server <- function(input, output, session) {
   }) #end table render
   
   
-  
+  #english translator
+  output$english <- renderPrint({
+    
+    
+    
+    df() -> df_text
+    df_text %>% 
+      
+      select("Task" = task,
+             "Exact Proportion" = prop,
+             "LaPlace Proportion" = laplace,
+             "Lower CI" = lowerci,
+             "Upper CI" = upperci)
+    
+    
+    
+    
+    
+    
+  })
   
   
   
