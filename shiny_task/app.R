@@ -10,7 +10,7 @@
 library(shiny)
 library(tidyverse)
 library(wesanderson)
-
+library(RColorBrewer)
 
 # Define UI for application that draws a histogram
 ui <- fluidPage(
@@ -143,12 +143,31 @@ ui <- fluidPage(
       ),
       
       #advanced options
+      
+      #point estimate selection
       conditionalPanel(
         condition = "input.adv == 'show' ",
         radioButtons(inputId = "point_est",
-                    "What kind of point estimate do you want to graph?",
+                    "Point estimate calculation method:",
                     choices = c("LaPlace","Exact"),
                     selected = "LaPlace")
+      ),
+      
+      #color chooser
+      
+      conditionalPanel(
+        condition = "input.adv == 'show' ",
+        selectInput(inputId = "colpal",
+                     "Color palette generation:",
+                     choices = c("Red Hat Brand" = "rh",
+                                 "The Life Aquatic" = "ziz",
+                                 "The Grand Budapest Hotel" = "buda",
+                                 "The Royal Tenenbaums" = "royal",
+                                 "The Darjeeling Limited" = "dar",
+                                 "Moonrise Kingdom" = "moon",
+                                 "Color Blind Friendly" = "color-b",
+                                 "Single Hue" = "single"),
+                     selected = "rh")
       )
       
       #end sidebar
@@ -249,12 +268,63 @@ server <- function(input, output, session) {
       
       }) #end df creation
       
+      #color palette generator
+  
+      colpal <- reactive({
+        
+        if (input$colpal == "rh") {
+          c("#cc0000",
+            "#0088ce",
+            "#f0ab00",
+            "#3B0083",
+            "#00b9e4",
+            "#92d400",
+            "#007a87",
+            "#f0ab00"
+          ) -> colpal
+          
+        } else if (input$colpal == "ziz") {
+          
+          wes_palette(8, name = "Zissou1", type = "continuous") -> colpal
+        
+        } else if (input$colpal == "buda") {
+          
+          wes_palette(8, name = "GrandBudapest1", type = "continuous") -> colpal
+        
+        } else if (input$colpal == "royal") {
+          
+          wes_palette(8, name = "Royal1", type = "continuous") -> colpal
+          
+        } else if (input$colpal == "dar") {
+          
+          wes_palette(8, name = "Darjeeling1", type = "continuous") -> colpal
+          
+        } else if (input$colpal == "moon") {
+          
+          wes_palette(8, name = "Moonrise1", type = "continuous") -> colpal
+          
+        }  else if (input$colpal == "color-b") {
+          
+          brewer.pal(8,"Accent",colorblindFriendly=T) -> colpal
+          
+        } else {
+          
+          brewer.pal(8,"Blues") -> colpal
+          
+        } 
+        
+        
+        
+      }) #end color palette
+  
+  
+  
       #create plot output
       output$plot <- renderPlot({
         
         
       #plot colors
-      pal <- wes_palette(8, name = "Zissou1", type = "continuous")
+      pal <- colpal()
         
       #start plot
       df() -> df_p
