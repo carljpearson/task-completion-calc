@@ -144,6 +144,19 @@ ui <- fluidPage(
       
       #advanced options
       
+      #z value selection
+      conditionalPanel(
+        condition = "input.adv == 'show' ",
+        selectInput(inputId = "zval",
+                     "Confidence level selection:",
+                     choices = c("80%" = 1.28,
+                                 "85%" = 1.44,
+                                 "90%" = 1.64,
+                                 "95%" = 1.96,
+                                 "99%" = 2.58),
+                     selected = "1.96")
+      ),
+      
       #point estimate selection
       conditionalPanel(
         condition = "input.adv == 'show' ",
@@ -175,10 +188,29 @@ ui <- fluidPage(
     
     # Show a plot of the generated distribution
     mainPanel(
+      
+      #show main graph
       plotOutput("plot"),
       hr(),
-      h4("Data used to produce graph"),
+      
+      #toggle table
+      radioButtons(inputId = "table_view",
+                   label = "View data table",
+                   c("Hide" = "hide",
+                     "Show" = "show"
+                   ),
+                   inline=T
+      ),
+      
+      
+      
+      
+      
+      conditionalPanel(
+      condition = "input.table_view == 'show' ",
+      h4("Data used to produce graph"),  
       tableOutput("table")
+      )
     )
   )
 )
@@ -187,7 +219,7 @@ ui <- fluidPage(
 server <- function(input, output, session) {
   
   
-  #change slider end points
+  #change slider end points -----
   observe({
     val <- input$total
     # Control the value, min, max, and step on range of task completion
@@ -203,7 +235,7 @@ server <- function(input, output, session) {
   })
   
   
-  #build df for all plots/tables
+  #build df for all plots/tables -----
   df <- reactive({
     if (input$task_num == 8) {
       pass <- c(input$pass1,input$pass2,input$pass3,input$pass4,input$pass5,input$pass6,input$pass7,input$pass8)
@@ -248,15 +280,15 @@ server <- function(input, output, session) {
       
     }
    
-   # z <- input$z_value
+    zval <- as.numeric(input$zval)
     
-    
+    #calc df
     df_t %>% 
-      mutate(total=input$total) %>% 
-      mutate(prop=pass/total) %>%
-      mutate(laplace = (pass+1)/(total+2)) %>%
+      mutate(total=input$total) %>%  #get n col
+      mutate(prop=pass/total) %>% #exact proportion
+      mutate(laplace = (pass+1)/(total+2)) %>% #laplace point
       mutate(marg_laplace=( 
-        (sqrt( (laplace * (1-laplace)) /(total+2)) ) *1.96)
+        (sqrt( (laplace * (1-laplace)) /(total+2)) ) * zval)
       ) %>%
       mutate(lowerci=laplace-marg_laplace) %>%
       mutate(lowerci= ifelse(lowerci<=0,0,lowerci)) %>%
@@ -268,7 +300,7 @@ server <- function(input, output, session) {
       
       }) #end df creation
       
-      #color palette generator
+      #color palette generator -----
   
       colpal <- reactive({
         
@@ -319,7 +351,7 @@ server <- function(input, output, session) {
   
   
   
-      #create plot output
+      #create plot output -----
       output$plot <- renderPlot({
         
         
