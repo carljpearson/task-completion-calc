@@ -32,7 +32,7 @@ ui <- fluidPage(
       numericInput(inputId = "task_num",
                    "Number of tasks in the study",
                    min = 1,
-                   max = 4,
+                   max = 8,
                    value = 2)
       ,
       
@@ -89,6 +89,50 @@ ui <- fluidPage(
                     ticks = FALSE)
       ),
       
+      #task 5 passed input (conditional)
+      conditionalPanel(
+        condition = "input.task_num >= 5",
+        sliderInput(inputId = "pass5",
+                    "Task 5 Successes",
+                    min = 1,
+                    max = 50,
+                    value = 10,
+                    ticks = FALSE)
+      ),
+      
+      #task 6 passed input (conditional)
+      conditionalPanel(
+        condition = "input.task_num >= 6",
+        sliderInput(inputId = "pass6",
+                    "Task 6 Successes",
+                    min = 1,
+                    max = 50,
+                    value = 10,
+                    ticks = FALSE)
+      ),
+      
+      #task 7 passed input (conditional)
+      conditionalPanel(
+        condition = "input.task_num >= 7",
+        sliderInput(inputId = "pass7",
+                    "Task 7 Successes",
+                    min = 1,
+                    max = 50,
+                    value = 10,
+                    ticks = FALSE)
+      ),
+      
+      #task 8 passed input (conditional)
+      conditionalPanel(
+        condition = "input.task_num >= 8",
+        sliderInput(inputId = "pass8",
+                    "Task 8 Successes",
+                    min = 1,
+                    max = 50,
+                    value = 10,
+                    ticks = FALSE)
+      ),
+      
       #advanced panel open
       radioButtons(inputId = "adv",
                     label = "Advanced options",
@@ -127,34 +171,55 @@ server <- function(input, output, session) {
   #change slider end points
   observe({
     val <- input$total
-    # Control the value, min, max, and step.
+    # Control the value, min, max, and step on range of task completion
     # Step size is 2 when input value is even; 1 when value is odd.
     updateSliderInput(session, "pass1", max = val)
     updateSliderInput(session, "pass2", max = val)
     updateSliderInput(session, "pass3", max = val)
     updateSliderInput(session, "pass4", max = val)
+    updateSliderInput(session, "pass5", max = val)
+    updateSliderInput(session, "pass6", max = val)
+    updateSliderInput(session, "pass7", max = val)
+    updateSliderInput(session, "pass8", max = val)
   })
   
   
-  #plot table output with reactive df
+  #build df for all plots/tables
   df <- reactive({
-    if (input$task_num == 4) {
+    if (input$task_num == 8) {
+      pass <- c(input$pass1,input$pass2,input$pass3,input$pass4,input$pass5,input$pass6,input$pass7,input$pass8)
+      task <- c(1:8)
+      df_t <- data.frame(pass,task)
+      
+    } else if (input$task_num == 7) {
+      pass <- c(input$pass1,input$pass2,input$pass3,input$pass4,input$pass5,input$pass6,input$pass7)
+      task <- c(1:7)
+      df_t <- data.frame(pass,task)
+      
+    } else if (input$task_num == 6) {
+      pass <- c(input$pass1,input$pass2,input$pass3,input$pass4,input$pass5,input$pass6)
+      task <- c(1:6)
+      df_t <- data.frame(pass,task)
+      
+    } else if (input$task_num == 5) {
+      pass <- c(input$pass1,input$pass2,input$pass3,input$pass4,input$pass5)
+      task <- c(1:5)
+      df_t <- data.frame(pass,task)
+      
+    } else if (input$task_num == 4) {
       pass <- c(input$pass1,input$pass2,input$pass3,input$pass4)
       task <- c(1:4)
       df_t <- data.frame(pass,task)
-      
       
     } else if (input$task_num == 3) {
       pass <- c(input$pass1,input$pass2,input$pass3)
       task <- c(1:3)
       df_t <- data.frame(pass,task)
       
-      
     } else if (input$task_num == 2) {
       pass <- c(input$pass1,input$pass2)
       task <- c(1:2)
       df_t <- data.frame(pass,task)
-      
       
     } else {
       pass <- c(input$pass1)
@@ -189,7 +254,7 @@ server <- function(input, output, session) {
         
         
       #plot colors
-      pal <- wes_palette(4, name = "Zissou1", type = "discrete")
+      pal <- wes_palette(8, name = "Zissou1", type = "continuous")
         
       #start plot
       df() -> df_p
