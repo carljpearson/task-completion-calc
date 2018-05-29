@@ -44,9 +44,13 @@ ui <- fluidPage(
                    value = 10)
       ,
       
+      #start completion sliders
+      hr(),
+      h4("Enter task completion rates below for each task"),
+      hr(),
       #task 1 passed input
       sliderInput(inputId = "pass1",
-                  "Number of users that succeeded in task 1",
+                  "Task 1 Successes",
                   min = 1,
                   max = 50,
                   value = 10,
@@ -56,7 +60,7 @@ ui <- fluidPage(
       conditionalPanel(
         condition = "input.task_num >= 2",
         sliderInput(inputId = "pass2",
-                    "Number of users that succeeded in task 2",
+                    "Task 2 Successes",
                     min = 1,
                     max = 50,
                     value = 10,
@@ -67,7 +71,7 @@ ui <- fluidPage(
       conditionalPanel(
         condition = "input.task_num >= 3",
         sliderInput(inputId = "pass3",
-                    "Number of users that succeeded in task 3",
+                    "Task 3 Successes",
                     min = 1,
                     max = 50,
                     value = 10,
@@ -78,7 +82,7 @@ ui <- fluidPage(
       conditionalPanel(
         condition = "input.task_num >= 4",
         sliderInput(inputId = "pass4",
-                    "Number of users that succeeded in task 4",
+                    "Task 4 Successes",
                     min = 1,
                     max = 50,
                     value = 10,
@@ -109,6 +113,8 @@ ui <- fluidPage(
     # Show a plot of the generated distribution
     mainPanel(
       plotOutput("plot"),
+      hr(),
+      h4("Data used to produce graph"),
       tableOutput("table")
     )
   )
