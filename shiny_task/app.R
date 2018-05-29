@@ -51,7 +51,7 @@ ui <- fluidPage(
       #task 1 passed input
       sliderInput(inputId = "pass1",
                   "Task 1 Successes",
-                  min = 1,
+                  min = 0,
                   max = 50,
                   value = 10,
                   ticks = FALSE)
@@ -61,7 +61,7 @@ ui <- fluidPage(
         condition = "input.task_num >= 2",
         sliderInput(inputId = "pass2",
                     "Task 2 Successes",
-                    min = 1,
+                    min = 0,
                     max = 50,
                     value = 10,
                     ticks = FALSE)
@@ -72,7 +72,7 @@ ui <- fluidPage(
         condition = "input.task_num >= 3",
         sliderInput(inputId = "pass3",
                     "Task 3 Successes",
-                    min = 1,
+                    min = 0,
                     max = 50,
                     value = 10,
                     ticks = FALSE)
@@ -83,7 +83,7 @@ ui <- fluidPage(
         condition = "input.task_num >= 4",
         sliderInput(inputId = "pass4",
                     "Task 4 Successes",
-                    min = 1,
+                    min = 0,
                     max = 50,
                     value = 10,
                     ticks = FALSE)
@@ -94,7 +94,7 @@ ui <- fluidPage(
         condition = "input.task_num >= 5",
         sliderInput(inputId = "pass5",
                     "Task 5 Successes",
-                    min = 1,
+                    min = 0,
                     max = 50,
                     value = 10,
                     ticks = FALSE)
@@ -105,7 +105,7 @@ ui <- fluidPage(
         condition = "input.task_num >= 6",
         sliderInput(inputId = "pass6",
                     "Task 6 Successes",
-                    min = 1,
+                    min = 0,
                     max = 50,
                     value = 10,
                     ticks = FALSE)
@@ -116,7 +116,7 @@ ui <- fluidPage(
         condition = "input.task_num >= 7",
         sliderInput(inputId = "pass7",
                     "Task 7 Successes",
-                    min = 1,
+                    min = 0,
                     max = 50,
                     value = 10,
                     ticks = FALSE)
@@ -127,7 +127,7 @@ ui <- fluidPage(
         condition = "input.task_num >= 8",
         sliderInput(inputId = "pass8",
                     "Task 8 Successes",
-                    min = 1,
+                    min = 0,
                     max = 50,
                     value = 10,
                     ticks = FALSE)
@@ -170,7 +170,7 @@ ui <- fluidPage(
       
       conditionalPanel(
         condition = "input.adv == 'show' ",
-        selectInput(inputId = "colpal",
+        selectizeInput(inputId = "colpal",
                      "Color palette generation:",
                      choices = c("Red Hat Brand" = "rh",
                                  "The Life Aquatic" = "ziz",
@@ -179,7 +179,7 @@ ui <- fluidPage(
                                  "The Darjeeling Limited" = "dar",
                                  "Moonrise Kingdom" = "moon",
                                  "Color Blind Friendly" = "color-b",
-                                 "Single Hue" = "single"),
+                                 "Gray Alternating" = "single"),
                      selected = "rh")
       )
       
@@ -202,10 +202,7 @@ ui <- fluidPage(
                    inline=T
       ),
       
-      
-      
-      
-      
+      #show datatable
       conditionalPanel(
       condition = "input.table_view == 'show' ",
       h4("Data used to produce graph"),  
@@ -280,25 +277,47 @@ server <- function(input, output, session) {
       
     }
    
+    #get zval as numeric
     zval <- as.numeric(input$zval)
+    
+    #z value for exact when values are 0 or 1 
+   
+      if (input$zval==2.58){
+        z_one_sided <- 2.33
+      } else if (input$zval==1.96) {
+        z_one_sided <- 1.65
+      } else if (input$zval==1.64){
+        z_one_sided <- 1.28
+      } else if (input$zval==1.44){
+        z_one_sided <- 1.04
+      } else {
+        z_one_sided <- .84
+      }
     
     #calc df
     df_t %>% 
-      mutate(total=input$total) %>%  #get n col
-      mutate(prop=pass/total) %>% #exact proportion
+      mutate(total = input$total) %>%  #get n col
+      mutate(prop = pass/total) %>% #exact proportion
       mutate(laplace = (pass+1)/(total+2)) %>% #laplace point
-      mutate(marg_laplace=( 
-        (sqrt( (laplace * (1-laplace)) /(total+2)) ) * zval)
-      ) %>%
-      mutate(lowerci=laplace-marg_laplace) %>%
-      mutate(lowerci= ifelse(lowerci<=0,0,lowerci)) %>%
-      mutate(upperci=laplace+marg_laplace) %>%
-      mutate(upperci= ifelse(upperci>=1,1,upperci)) %>%
-      mutate(task=as.factor(trunc(task,digits=1)) ) -> df
-      
+      mutate(p_adj = (total*prop + (zval*zval) / 2)/(total + (zval*zval)) ) %>% #adjust p for wald
+      mutate(n_adj = total + (zval*zval)) %>% #adjust n for wald
+      mutate(adj_wald_marg =  zval * sqrt(p_adj*(1- p_adj)/n_adj)) %>% #wald margin value
+      mutate(lowerci = p_adj-adj_wald_marg) %>% #lower wald ci
+      mutate(lowerci = ifelse(lowerci<=0,0,lowerci)) %>%
+      mutate(upperci = p_adj+adj_wald_marg) %>% #upper wald ci
+      mutate(upperci = ifelse(upperci>=1,1,upperci)) %>%
+      mutate(task = as.factor(trunc(task,digits=1)) ) %>%
+      mutate(p_adj_mle = (total*prop + (z_one_sided*z_one_sided) / 2)/(total + (z_one_sided*z_one_sided)) ) %>%
+      mutate(n_adj_mle = total + (z_one_sided*z_one_sided)) %>%
+      mutate(adj_wald_marg_mle =  z_one_sided * sqrt(p_adj_mle*(1- p_adj_mle)/n_adj_mle)) %>%
+      mutate(lowerci_mle = ifelse(prop == 1, 1-adj_wald_marg_mle ,lowerci) ) %>%
+      mutate(upperci_mle = ifelse(prop == 0, 0+adj_wald_marg_mle ,upperci) )  -> df
       
       
       }) #end df creation
+  
+  
+      
       
       #color palette generator -----
   
@@ -308,9 +327,9 @@ server <- function(input, output, session) {
           c("#cc0000",
             "#0088ce",
             "#f0ab00",
-            "#3B0083",
-            "#00b9e4",
             "#92d400",
+            "#00b9e4",
+            "#6C44A0",
             "#007a87",
             "#f0ab00"
           ) -> colpal
@@ -337,11 +356,11 @@ server <- function(input, output, session) {
           
         }  else if (input$colpal == "color-b") {
           
-          brewer.pal(8,"Accent",colorblindFriendly=T) -> colpal
+          brewer.pal(8,"Accent") -> colpal
           
         } else {
           
-          brewer.pal(8,"Blues") -> colpal
+          c("#808080","#bfbfbf","#808080","#bfbfbf","#808080","#bfbfbf","#808080","#bfbfbf") -> colpal
           
         } 
         
@@ -352,14 +371,41 @@ server <- function(input, output, session) {
   
   
       #create plot output -----
+      
+      
+      
+      #naming z value perc
+      zp <- reactive({
+        if (input$zval==2.58){
+          zp <- "99%"
+        } else if (input$zval==1.96) {
+          zp <- "95%"
+        } else if (input$zval==1.64){
+          zp <- "90%"
+        } else if (input$zval==1.44){
+          zp <- "85%"
+        } else {
+          zp <- "80%"
+        }
+      })
+      
       output$plot <- renderPlot({
         
+      #get z percentage for name
+      zp <- zp()
+      
+      
+      
         
       #plot colors
       pal <- colpal()
         
       #start plot
+      
       df() -> df_p
+      #ifelse based on excat or laplace
+      
+      if(input$point_est=="LaPlace"){
       df_p %>%  
       ggplot(aes(x=task,y=laplace)) + 
       geom_bar(aes(fill=task), stat = "identity") +
@@ -369,15 +415,32 @@ server <- function(input, output, session) {
       scale_y_continuous(labels = scales::percent) +
       guides(fill=FALSE) +
       theme_minimal() +
-      labs(x="Task", y="General estimate of successes") +
-      ggtitle(label="Successes by task", subtitle = "Estimated with Laplace method") +
+      labs(x="Task", y="Success rate proportion") +
+      ggtitle(label="Best statistical estimate of successe rate by task", subtitle = paste("LaPlace point estimate, Confidence Intervals at",zp)) +
       theme(axis.text.x = element_text(size=15),
             axis.text.y = element_text(size=15),  
             axis.title.x = element_text(size=15),
             axis.title.y = element_text(size=15),
-            title = element_text(size=18))
+            title = element_text(size=18)) 
+      } else {
+      df_p %>%  
+        ggplot(aes(x=task,y=prop)) + 
+        geom_bar(aes(fill=task), stat = "identity") +
+        geom_errorbar(aes(ymin=lowerci_mle, ymax=upperci_mle, width=.2)) +
+        scale_fill_manual(values=pal) +
+        coord_cartesian(ylim = c(0,1)) +
+        scale_y_continuous(labels = scales::percent) +
+        guides(fill=FALSE) +
+        theme_minimal() +
+        labs(x="Task", y="Success rate proportion") +
+        ggtitle(label="Exact observered proportions", subtitle = paste("Confidence Intervals at",zp)) +
+        theme(axis.text.x = element_text(size=15),
+              axis.text.y = element_text(size=15),  
+              axis.title.x = element_text(size=15),
+              axis.title.y = element_text(size=15),
+              title = element_text(size=18)) 
     
-    
+      }#end ifelse of point est
   }) #end table render
   
   
@@ -390,8 +453,8 @@ server <- function(input, output, session) {
     df() -> df_t
       
       
-    
-    
+    #change table based on CI for bounds of exact
+    if(input$point_est=="LaPlace"){
     df_t %>%
       select("Task" = task,
              "Exact Proportion" = prop,
@@ -399,7 +462,16 @@ server <- function(input, output, session) {
              "Lower CI" = lowerci,
              "Upper CI" = upperci
       )-> df_t
-    
+    } else {
+      df_t %>%
+        select("Task" = task,
+               "Exact Proportion" = prop,
+               "LaPlace Proportion" = laplace,
+               "Lower CI" = lowerci_mle,
+               "Upper CI" = upperci_mle
+        )-> df_t
+      
+    }
     
   }) #end table render
   
