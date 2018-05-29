@@ -416,7 +416,7 @@ server <- function(input, output, session) {
       guides(fill=FALSE) +
       theme_minimal() +
       labs(x="Task", y="Success rate proportion") +
-      ggtitle(label="Best statistical estimate of successe rate by task", subtitle = paste("LaPlace point estimate, Confidence Intervals at",zp)) +
+      ggtitle(label="Estimates of success rate by task", subtitle = paste("Confidence Intervals at",zp)) +
       theme(axis.text.x = element_text(size=15),
             axis.text.y = element_text(size=15),  
             axis.title.x = element_text(size=15),
@@ -466,7 +466,6 @@ server <- function(input, output, session) {
       df_t %>%
         select("Task" = task,
                "Exact Proportion" = prop,
-               "LaPlace Proportion" = laplace,
                "Lower CI" = lowerci_mle,
                "Upper CI" = upperci_mle
         )-> df_t
