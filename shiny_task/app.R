@@ -83,8 +83,25 @@ ui <- fluidPage(
                     max = 50,
                     value = 10,
                     ticks = FALSE)
-      )
+      ),
       
+      #advanced panel open
+      radioButtons(inputId = "adv",
+                    label = "Advanced options",
+                    c("Hide" = "hide",
+                      "Show" = "show"
+                                ),
+                   inline=T
+      ),
+      
+      #advanced options
+      conditionalPanel(
+        condition = "input.adv == 'show' ",
+        radioButtons(inputId = "point_est",
+                    "What kind of point estimate do you want to graph?",
+                    choices = c("LaPlace","Exact"),
+                    selected = "LaPlace")
+      )
       
       #end sidebar
     ), 
@@ -114,7 +131,7 @@ server <- function(input, output, session) {
   
   
   #plot table output with reactive df
-  output$plot <- renderPlot({
+  df <- reactive({
     if (input$task_num == 4) {
       pass <- c(input$pass1,input$pass2,input$pass3,input$pass4)
       task <- c(1:4)
@@ -140,7 +157,10 @@ server <- function(input, output, session) {
       
       
     }
-    pal <- wes_palette(4, name = "Zissou1", type = "discrete")
+   
+   # z <- input$z_value
+    
+    
     df_t %>% 
       mutate(total=input$total) %>% 
       mutate(prop=pass/total) %>%
@@ -152,7 +172,22 @@ server <- function(input, output, session) {
       mutate(lowerci= ifelse(lowerci<=0,0,lowerci)) %>%
       mutate(upperci=laplace+marg_laplace) %>%
       mutate(upperci= ifelse(upperci>=1,1,upperci)) %>%
-      mutate(task=as.factor(trunc(task,digits=1)) ) %>%
+      mutate(task=as.factor(trunc(task,digits=1)) ) -> df
+      
+      
+      
+      }) #end df creation
+      
+      #create plot output
+      output$plot <- renderPlot({
+        
+        
+      #plot colors
+      pal <- wes_palette(4, name = "Zissou1", type = "discrete")
+        
+      #start plot
+      df() -> df_p
+      df_p %>%  
       ggplot(aes(x=task,y=laplace)) + 
       geom_bar(aes(fill=task), stat = "identity") +
       geom_errorbar(aes(ymin=lowerci, ymax=upperci, width=.2)) +
@@ -177,44 +212,14 @@ server <- function(input, output, session) {
   
   #plot table output with reactive df
   output$table <- renderTable({
-    if (input$task_num == 4) {
-      pass <- c(input$pass1,input$pass2,input$pass3,input$pass4)
-      task <- c(1:4)
-      df_t <- data.frame(pass,task)
-      
-      
-    } else if (input$task_num == 3) {
-      pass <- c(input$pass1,input$pass2,input$pass3)
-      task <- c(1:3)
-      df_t <- data.frame(pass,task)
-      
-      
-    } else if (input$task_num == 2) {
-      pass <- c(input$pass1,input$pass2)
-      task <- c(1:2)
-      df_t <- data.frame(pass,task)
-      
-      
-    } else {
-      pass <- c(input$pass1)
-      task <- c(1)
-      df_t <- data.frame(pass,task)
-      
-      
-    }
     
-    df_t %>% 
-      mutate(total=input$total) %>% 
-      mutate(prop=pass/total) %>%
-      mutate(laplace = (pass+1)/(total+2)) %>%
-      mutate(marg_laplace=( 
-        (sqrt( (laplace * (1-laplace)) /(total+2)) ) *1.96)
-      ) %>%
-      mutate(lowerci=laplace-marg_laplace) %>%
-      mutate(lowerci= ifelse(lowerci<=0,0,lowerci)) %>%
-      mutate(upperci=laplace+marg_laplace) %>%
-      mutate(upperci= ifelse(upperci>=1,1,upperci)) %>%
-      mutate(task=as.factor(trunc(task,digits=1)) ) %>%
+    #get data from reactive expression
+    df() -> df_t
+      
+      
+    
+    
+    df_t %>%
       select("Task" = task,
              "Exact Proportion" = prop,
              "LaPlace Proportion" = laplace,
