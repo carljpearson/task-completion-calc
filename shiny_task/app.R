@@ -43,7 +43,7 @@ ui <- fluidPage(
       
       #start completion sliders
       hr(),
-      h4("Enter task completion rates below for each task"),
+      h4("Enter task success rates below for each task"),
       hr(),
       #task 1 passed input
       sliderInput(inputId = "pass1",
@@ -186,8 +186,14 @@ ui <- fluidPage(
     # Show a plot of the generated distribution
     mainPanel(
       
+      
+      
       #show main graph
       plotOutput("plot"),
+      hr(),
+      
+      #download button
+      downloadButton("download", "Download"),
       hr(),
       
       #toggle text
@@ -222,6 +228,7 @@ ui <- fluidPage(
       h4("Data used to produce graph"),  
       tableOutput("table")
       )
+      
     )
   )
 )
@@ -403,7 +410,7 @@ server <- function(input, output, session) {
         }
       })
       
-      output$plot <- renderPlot({
+      plotInput <- reactive({
         
       #get z percentage for name
       zp <- zp()
@@ -457,7 +464,12 @@ server <- function(input, output, session) {
       }#end ifelse of point est
   }) #end table render
   
-  
+  #table output
+      
+  output$plot <- renderPlot({
+    print(plotInput())
+  })    
+      
   
   
   #plot table output with reactive df
@@ -500,12 +512,24 @@ server <- function(input, output, session) {
     
     
     data.frame(
-        paste("For task ",df_text$task,", we observed ",df_text$pass, " out of ", df_text$total, " participants succeed in the task goal, but our best estimate is that ", (100*round(df_text$laplace,digits=2)), "% of users will succeed in general.", "  However, given our confidence level of ", zp, " and sample size of ", df_text$total,", we can plausibly expect at that up to ",(100*round((1-df_text$lowerci),digits=2)),"% of users will not be able to succeed in the task.", sep = "")
+        paste("For task ",df_text$task,", we observed ",df_text$pass, " out of ", df_text$total, " participants succeed in the task goal, but our best estimate is that ", (100*round(df_text$laplace,digits=2)), "% of users will succeed in general.", "  To consider this more conservatively, given our confidence level of ", zp, " and sample size of ", df_text$total,", we can plausibly expect at that up to ",(100*round((1-df_text$lowerci),digits=2)),"% of users will not be able to succeed in the task.", sep = "")
       ) -> text.output
     text.output %>% rename(" " = !!names(.[1])) -> text.output
     
     
   }) #end print render
+  
+  #saving plot
+  output$download <- downloadHandler(
+    
+    filename = function() {
+      paste("my_plot_",nrow(df()),"tasks",".png",sep="")
+    },
+    content = function(file) {
+      ggsave(file, plot = plotInput(), device = "png", bg = "transparent",width = 6,height=3)
+    }
+  ) #end plot saver
+  
   
   
   
