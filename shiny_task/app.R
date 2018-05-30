@@ -190,6 +190,23 @@ ui <- fluidPage(
       plotOutput("plot"),
       hr(),
       
+      #toggle text
+      radioButtons(inputId = "text_view",
+                   label = "View description of graph in plain terms",
+                   c("Hide" = "hide",
+                     "Show" = "show"
+                   ),
+                   inline=T
+      ),
+  
+      
+      #text output
+      conditionalPanel(
+        condition = "input.text_view == 'show' ",
+        tableOutput("text")
+      ),
+      
+      
       #toggle table
       radioButtons(inputId = "table_view",
                    label = "View data table",
@@ -423,14 +440,14 @@ server <- function(input, output, session) {
       df_p %>%  
         ggplot(aes(x=task,y=prop)) + 
         geom_bar(aes(fill=task), stat = "identity") +
-        geom_errorbar(aes(ymin=lowerci_mle, ymax=upperci_mle, width=.2)) +
+        geom_errorbar(aes(ymin=lowerci, ymax=upperci, width=.2)) +
         scale_fill_manual(values=pal) +
         coord_cartesian(ylim = c(0,1)) +
         scale_y_continuous(labels = scales::percent) +
         guides(fill=FALSE) +
         theme_minimal() +
         labs(x="Task", y="Success rate proportion") +
-        ggtitle(label="Exact observered proportions", subtitle = paste("Confidence Intervals at",zp)) +
+        ggtitle(label="Exact observered proportions", subtitle = paste("Confidence Intervals at",zp, "based on LaPlace estimate and adjusted wald method")) +
         theme(axis.text.x = element_text(size=15),
               axis.text.y = element_text(size=15),  
               axis.title.x = element_text(size=15),
@@ -473,25 +490,22 @@ server <- function(input, output, session) {
   
   
   #english translator
-  output$english <- renderPrint({
+  output$text <- renderTable({
     
     
     
     df() -> df_text
-    df_text %>% 
+    zp() -> zp
       
-      select("Task" = task,
-             "Exact Proportion" = prop,
-             "LaPlace Proportion" = laplace,
-             "Lower CI" = lowerci,
-             "Upper CI" = upperci)
     
     
+    data.frame(
+        paste("For task ",df_text$task,", we observed ",df_text$pass, " of ", df_text$total, " participants succeed in the task goal, but our best estimate is that ", (100*round(df_text$laplace,digits=2)), "% of users will succeed in general.", "  At a confidence level of ", zp, ", we can plausibilty expect at that ",(100*round((1-df_text$lowerci),digits=2)),"% of users will not be able to succeed in the task", sep = "")
+      ) -> text.output
+    text.output %>% rename(" " = !!names(.[1])) -> text.output
     
     
-    
-    
-  })
+  }) #end print render
   
   
   
