@@ -447,7 +447,7 @@ server <- function(input, output, session) {
         guides(fill=FALSE) +
         theme_minimal() +
         labs(x="Task", y="Success rate proportion") +
-        ggtitle(label="Exact observered proportions", subtitle = paste("Confidence Intervals at",zp, "based on LaPlace estimate and adjusted wald method")) +
+        ggtitle(label="Exact observered proportions", subtitle = paste("Confidence Intervals at",zp, "based on LaPlace estimate and Adjusted-Wald method")) +
         theme(axis.text.x = element_text(size=15),
               axis.text.y = element_text(size=15),  
               axis.title.x = element_text(size=15),
@@ -500,7 +500,7 @@ server <- function(input, output, session) {
     
     
     data.frame(
-        paste("For task ",df_text$task,", we observed ",df_text$pass, " of ", df_text$total, " participants succeed in the task goal, but our best estimate is that ", (100*round(df_text$laplace,digits=2)), "% of users will succeed in general.", "  At a confidence level of ", zp, ", we can plausibilty expect at that ",(100*round((1-df_text$lowerci),digits=2)),"% of users will not be able to succeed in the task", sep = "")
+        paste("For task ",df_text$task,", we observed ",df_text$pass, " out of ", df_text$total, " participants succeed in the task goal, but our best estimate is that ", (100*round(df_text$laplace,digits=2)), "% of users will succeed in general.", "  However, given our confidence level of ", zp, " and sample size of ", df_text$total,", we can plausibly expect at that up to ",(100*round((1-df_text$lowerci),digits=2)),"% of users will not be able to succeed in the task.", sep = "")
       ) -> text.output
     text.output %>% rename(" " = !!names(.[1])) -> text.output
     
