@@ -18,8 +18,9 @@ ui <- fluidPage(
   
   
   # Numeric input total
-  sidebarLayout(
-    sidebarPanel(
+  fluidRow(
+    column(4,
+      wellPanel(
       
       #subtitle
       h4("Enter your study data below"),
@@ -139,7 +140,7 @@ ui <- fluidPage(
                    inline=T
       ),
       
-      #advanced options
+      #advanced options -----
       
       #z value selection
       conditionalPanel(
@@ -180,58 +181,73 @@ ui <- fluidPage(
                      selected = "rh")
       )
       
-      #end sidebar
-    ), 
+      
+      
+      
+      
+      ) #end well panel
+      
+      
+      
+      
+      ), #end sidebar
     
-    # Show a plot of the generated distribution
-    mainPanel(
+    # Show a plot of the generated distribution -----
+    column(8,
+           
+           #show main graph
+           plotOutput("plot"),
+           
+           hr(),
+    fluidRow(
       
-      
-      
-      #show main graph
-      plotOutput("plot"),
-      hr(),
-      
-      #download button
-      downloadButton("download", "Download"),
-      hr(),
-      
-      #toggle text
-      radioButtons(inputId = "text_view",
-                   label = "View description of graph in plain terms",
-                   c("Hide" = "hide",
-                     "Show" = "show"
-                   ),
-                   inline=T
-      ),
-  
-      
-      #text output
-      conditionalPanel(
-        condition = "input.text_view == 'show' ",
-        tableOutput("text")
+      column(5,  #for text options and output
+             
+             #toggle text
+             radioButtons(inputId = "text_view",
+                          label = "View description of graph in plain terms",
+                          c("Hide" = "hide",
+                            "Show" = "show"
+                          ),
+                          inline=T
+             ),
+             
+             #text output
+             conditionalPanel(
+               condition = "input.text_view == 'show' ",
+               tableOutput("text")
+             )
       ),
       
-      
-      #toggle table
-      radioButtons(inputId = "table_view",
-                   label = "View data table",
-                   c("Hide" = "hide",
-                     "Show" = "show"
-                   ),
-                   inline=T
+      column( 4, #for datatable options and output
+              #toggle table
+              radioButtons(inputId = "table_view",
+                           label = "View data table",
+                           c("Hide" = "hide",
+                             "Show" = "show"
+                           ),
+                           inline=T
+              ),
+              
+              #show datatable
+              conditionalPanel(
+                condition = "input.table_view == 'show' ",
+                h4("Data used to produce graph"),  
+                tableOutput("table")
+              )
       ),
       
-      #show datatable
-      conditionalPanel(
-      condition = "input.table_view == 'show' ",
-      h4("Data used to produce graph"),  
-      tableOutput("table")
-      )
-      
+      column(1,
+     #download button
+           downloadButton("download", "Download Plot")     
+           )
+           )
+    ) #end graph fluidrow
+    
+    
     )
-  )
-)
+  ) #end fluidpage
+
 
 # Define server logic r
 server <- function(input, output, session) {
@@ -492,8 +508,8 @@ server <- function(input, output, session) {
       df_t %>%
         select("Task" = task,
                "Exact Proportion" = prop,
-               "Lower CI" = lowerci_mle,
-               "Upper CI" = upperci_mle
+               "Lower CI" = lowerci,
+               "Upper CI" = upperci
         )-> df_t
       
     }
