@@ -5,9 +5,11 @@
 # Add group possibilities (persona types, software versions, competitive analysis... etc)
 
 library(shiny)
+library(shinyWidgets)
 library(tidyverse)
 library(wesanderson)
 library(RColorBrewer)
+
 
 # Define UI for application that draws a histogram
 ui <- fluidPage(
@@ -17,7 +19,7 @@ ui <- fluidPage(
   
   
   
-  # Numeric input total
+  #side panel -----
   fluidRow(
     column(4,
       wellPanel(
@@ -26,7 +28,7 @@ ui <- fluidPage(
       h4("Enter your study data below"),
       hr(),
       
-      
+      #initial data parameters ----
       numericInput(inputId = "task_num",
                    "Number of tasks in the study",
                    min = 1,
@@ -42,7 +44,7 @@ ui <- fluidPage(
                    value = 10)
       ,
       
-      #start completion sliders
+      #start completion sliders -----
       hr(),
       h4("Enter task success rates below for each task"),
       hr(),
@@ -131,20 +133,18 @@ ui <- fluidPage(
                     ticks = FALSE)
       ),
       
-      #advanced panel open
-      radioButtons(inputId = "adv",
-                    label = "Advanced options",
-                    c("Hide" = "hide",
-                      "Show" = "show"
-                                ),
-                   inline=T
+      #advanced panel open -----
+      prettySwitch(inputId = "adv",
+                    label = "View advanced options",
+                   status = "primary"
       ),
+                
       
       #advanced options -----
       
       #z value selection
       conditionalPanel(
-        condition = "input.adv == 'show' ",
+        condition = "output.adv_out",
         selectInput(inputId = "zval",
                      "Confidence level selection:",
                      choices = c("80%" = 1.28,
@@ -155,19 +155,22 @@ ui <- fluidPage(
                      selected = "1.96")
       ),
       
+      
+      
+      
       #point estimate selection
       conditionalPanel(
-        condition = "input.adv == 'show' ",
+        condition = "output.adv_out",
         radioButtons(inputId = "point_est",
                     "Point estimate calculation method:",
                     choices = c("LaPlace","Exact"),
                     selected = "LaPlace")
       ),
       
-      #color chooser
+      #color chooser 
       
       conditionalPanel(
-        condition = "input.adv == 'show' ",
+        condition = "output.adv_out",
         selectizeInput(inputId = "colpal",
                      "Color palette generation:",
                      choices = c("Red Hat Brand" = "rh",
@@ -192,7 +195,10 @@ ui <- fluidPage(
       
       ), #end sidebar
     
-    # Show a plot of the generated distribution -----
+    
+  #main panel-----
+    
+    # Show a plot of the generated distribution 
     column(8,
            
            #show main graph
@@ -204,44 +210,38 @@ ui <- fluidPage(
       column(5,  #for text options and output
              
              #toggle text
-             radioButtons(inputId = "text_view",
-                          label = "View description of graph in plain terms",
-                          c("Hide" = "hide",
-                            "Show" = "show"
-                          ),
-                          inline=T
+             prettySwitch(inputId = "text_view",
+                          label = "View graph descriptions",
+                          status = "primary"
              ),
              
              #text output
              conditionalPanel(
-               condition = "input.text_view == 'show' ",
+               condition = "output.text_out",
                tableOutput("text")
              )
       ),
       
       column( 4, #for datatable options and output
               #toggle table
-              radioButtons(inputId = "table_view",
+              prettySwitch(inputId = "table_view",
                            label = "View data table",
-                           c("Hide" = "hide",
-                             "Show" = "show"
-                           ),
-                           inline=T
+                           status = "primary"
               ),
               
               #show datatable
               conditionalPanel(
-                condition = "input.table_view == 'show' ",
+                condition = "output.table_out",
                 h4("Data used to produce graph"),  
                 tableOutput("table")
               )
-      ),
+      ), #end table col
       
       column(1,
      #download button
            downloadButton("download", "Download Plot")     
            )
-           )
+      ) #end dl col
     ) #end graph fluidrow
     
     
@@ -249,9 +249,26 @@ ui <- fluidPage(
   ) #end fluidpage
 
 
-# Define server logic r
+# Define server logic r ----
 server <- function(input, output, session) {
   
+  
+  #switch controls----  
+  #adv
+  output$adv_out <- reactive({
+    input$adv==TRUE
+  })
+  outputOptions(output, "adv_out", suspendWhenHidden = FALSE)
+  #text
+  output$text_out <- reactive({
+    input$text_view==TRUE
+  })
+  outputOptions(output, "text_out", suspendWhenHidden = FALSE)
+  #table
+  output$table_out <- reactive({
+    input$table_view==TRUE
+  })
+  outputOptions(output, "table_out", suspendWhenHidden = FALSE)
   
   #change slider end points -----
   observe({
@@ -356,7 +373,7 @@ server <- function(input, output, session) {
   
       
       
-      #color palette generator -----
+  #color palette generator -----
   
       colpal <- reactive({
         
@@ -407,11 +424,7 @@ server <- function(input, output, session) {
   
   
   
-      #create plot output -----
-      
-      
-      
-      #naming z value perc
+  #naming z value perc ------
       zp <- reactive({
         if (input$zval==2.58){
           zp <- "99%"
@@ -425,7 +438,7 @@ server <- function(input, output, session) {
           zp <- "80%"
         }
       })
-      
+  #create plot object -----
       plotInput <- reactive({
         
       #get z percentage for name
@@ -480,15 +493,15 @@ server <- function(input, output, session) {
       }#end ifelse of point est
   }) #end table render
   
-  #table output
-      
+ 
+  #plot output -----    
   output$plot <- renderPlot({
     print(plotInput())
   })    
       
   
   
-  #plot table output with reactive df
+  #table output ----
   output$table <- renderTable({
     
     #get data from reactive expression
@@ -517,7 +530,7 @@ server <- function(input, output, session) {
   }) #end table render
   
   
-  #english translator
+  #text output -----
   output$text <- renderTable({
     
     
@@ -535,7 +548,7 @@ server <- function(input, output, session) {
     
   }) #end print render
   
-  #saving plot
+  #saving plot ----
   output$download <- downloadHandler(
     
     filename = function() {
