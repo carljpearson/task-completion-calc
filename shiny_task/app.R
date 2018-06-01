@@ -472,14 +472,7 @@ ui <- fluidPage(
               mutate(lowerci = ifelse(lowerci <= 0, 0, lowerci)) %>%
               mutate(upperci = p_adj + adj_wald_marg) %>% #upper wald ci
               mutate(upperci = ifelse(upperci >= 1, 1, upperci)) %>%
-              mutate(task = as.factor(trunc(task, digits = 1))) %>%
-              mutate(p_adj_mle = (total * prop + (z_one_sided * z_one_sided) / 2) /
-                       (total + (z_one_sided * z_one_sided))) %>%
-              mutate(n_adj_mle = total + (z_one_sided * z_one_sided)) %>%
-              mutate(adj_wald_marg_mle =  z_one_sided * sqrt(p_adj_mle * (1 - p_adj_mle) /
-                                                               n_adj_mle)) %>%
-              mutate(lowerci_mle = ifelse(prop == 1, 1 - adj_wald_marg_mle , lowerci)) %>%
-              mutate(upperci_mle = ifelse(prop == 0, 0 + adj_wald_marg_mle , upperci))  -> df
+              mutate(task = as.factor(trunc(task, digits = 1))) -> df
             
             
           }) #end df creation
