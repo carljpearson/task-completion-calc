@@ -221,28 +221,38 @@ ui <- fluidPage(
                #plot advanved options open -----
                prettySwitch(
                  inputId = "plot_adv",
-                 label = "View plot options options",
+                 label = "View plot options",
                  status = "primary",
                  slim = TRUE
                ),
                
+               
+               
+               column(5,
+                      conditionalPanel(
+                        condition = "output.plot_adv_out",
+                     p("Add benchmark line:")
+               ),
                conditionalPanel(
                  condition = "output.plot_adv_out",
                #toggle abline
-               prettySwitch(
-                 inputId = "abline",
-                 label = "Add \"good\" completion line",
-                 status = "primary"
+               switchInput(
+                 inputId = "abline"
+               )
                )
                ),
                
                #color chooser
                
+               column(4,
+                      
+                      
+                     
                conditionalPanel(
                  condition = "output.plot_adv_out",
                  selectizeInput(
                    inputId = "colpal",
-                   "Color palette generation:",
+                   "Choose color palette:",
                    choices = c(
                      "Red Hat Brand" = "rh",
                      "The Life Aquatic" = "ziz",
@@ -256,26 +266,53 @@ ui <- fluidPage(
                    selected = "rh"
                  )
                )
-               
-          
-          
+               )
+              
         )
       ), #end plot options row
       
       hr(),
-      fluidRow( #dl fluid row
+      fluidRow( #dl fluid row ------
+        
+                    
+                
         column(
-          8,
+          2,
           #download button
-          downloadButton("download", "Download Plot")
+          downloadButton("download", 
+                         "Download Plot"),
+          br(), br(),
+          #plot advanved options open -----
+          prettySwitch(
+            inputId = "dl_adv",
+            label = "Download options",
+            status = "primary",
+            slim = TRUE
+          )   
           
+        ), #end dl col) #dl fluid row end
+        column(
+          3,
+          #options
+          conditionalPanel(
+            condition = "output.dl_adv_out",
+          radioGroupButtons(
+            inputId = "bg",
+            label = "Background",
+            choices = c("Transparent", 
+                        "White"),
+            justified = TRUE
+          )
+          )
         ) #end dl col) #dl fluid row end
         
+        
+        
       ), #end dl fluid flow
-      br(),
+      hr(),
       
       
-      fluidRow( #text fluidrow
+      fluidRow( #text fluidrow -----
         
         
         column(
@@ -298,7 +335,7 @@ ui <- fluidPage(
       ),
         #end graph fluidrow
         
-        fluidRow(#table fluid row
+        fluidRow(#table fluid row -----
           column(
             8,
             #for datatable options and output
@@ -342,12 +379,17 @@ ui <- fluidPage(
           })
           outputOptions(output, "table_out", suspendWhenHidden = FALSE)
           
-          
           #adv plot
           output$plot_adv_out <- reactive({
             input$plot_adv == TRUE
           })
           outputOptions(output, "plot_adv_out", suspendWhenHidden = FALSE)
+          
+          #adv dl
+          output$dl_adv_out <- reactive({
+            input$dl_adv == TRUE
+          })
+          outputOptions(output, "dl_adv_out", suspendWhenHidden = FALSE)
           
           
           
@@ -601,7 +643,7 @@ ui <- fluidPage(
                 )) +
                 scale_fill_manual(values = pal) +
                 coord_cartesian(ylim = c(0, 1)) +
-                geom_abline(intercept=.78,slope=0, color = "gray")+
+                geom_abline(intercept=.78,slope=0, color = "gray",linetype = 2, size=2)+
                 scale_y_continuous(labels = scales::percent) +
                 guides(fill = FALSE) +
                 theme_minimal() +
@@ -627,7 +669,7 @@ ui <- fluidPage(
                 )) +
                 scale_fill_manual(values = pal) +
                 coord_cartesian(ylim = c(0, 1)) +
-                geom_abline(intercept=.78,slope=0, color = "gray")+
+                geom_abline(intercept=.78,slope=0, color = "gray", linetype = 2, size=2)+
                 geom_point(aes(y=laplace),size=8) +
                 scale_y_continuous(labels = scales::percent) +
                 guides(fill = FALSE) +
@@ -638,7 +680,7 @@ ui <- fluidPage(
                   subtitle = paste(
                     "Confidence Intervals at",
                     zp,
-                    "and black points indicate best estimates"
+                    "and black points indicate statistical best estimates"
                   )
                 ) +
                 theme(
@@ -713,6 +755,7 @@ ui <- fluidPage(
                 select(
                   "Task" = task,
                   "Exact Proportion" = prop,
+                  "LaPlace Statitistical Proportion" = laplace,
                   "Lower CI" = lowerci,
                   "Upper CI" = upperci
                 ) -> df_t
@@ -758,6 +801,13 @@ ui <- fluidPage(
           }) #end print render
           
           #saving plot ----
+          
+          bg_out <- reactive({
+            ifelse(input$bg == "Transparent", "transparent","white")
+          })
+          
+        
+          
           output$download <- downloadHandler(
             filename = function() {
               paste("my_plot_", nrow(df()), "tasks", ".png", sep = "")
@@ -767,9 +817,9 @@ ui <- fluidPage(
                 file,
                 plot = plotInput(),
                 device = "png",
-                bg = "transparent",
-                width = 6,
-                height = 3
+                bg =  bg_out(),
+                width = 8,
+                height = 5
               )
             }
           ) #end plot saver
