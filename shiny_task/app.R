@@ -277,7 +277,7 @@ ui <- fluidPage(
                     
                 
         column(
-          2,
+          3,
           #download button
           downloadButton("download", 
                          "Download Plot"),
@@ -292,13 +292,13 @@ ui <- fluidPage(
           
         ), #end dl col) #dl fluid row end
         column(
-          3,
+          4,
           #options
           conditionalPanel(
             condition = "output.dl_adv_out",
           radioGroupButtons(
             inputId = "bg",
-            label = "Background",
+            label = "Background:",
             choices = c("Transparent", 
                         "White"),
             justified = TRUE
