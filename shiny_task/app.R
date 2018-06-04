@@ -52,106 +52,10 @@ ui <- fluidPage(
         hr(),
         h4("Enter task success rates below for each task"),
         hr(),
-        #task 1 passed input
-        sliderInput(
-          inputId = "pass1",
-          "Task 1 Successes",
-          min = 0,
-          max = 50,
-          value = 10,
-          ticks = FALSE
-        )
-        ,
-        #task 2 passed input (conditional)
-        conditionalPanel(
-          condition = "input.task_num >= 2",
-          sliderInput(
-            inputId = "pass2",
-            "Task 2 Successes",
-            min = 0,
-            max = 50,
-            value = 10,
-            ticks = FALSE
-          )
-        )
-        ,
-        #task 3 passed input (conditional)
-        conditionalPanel(
-          condition = "input.task_num >= 3",
-          sliderInput(
-            inputId = "pass3",
-            "Task 3 Successes",
-            min = 0,
-            max = 50,
-            value = 10,
-            ticks = FALSE
-          )
-        )
-        ,
-        #task 4 passed input (conditional)
-        conditionalPanel(
-          condition = "input.task_num >= 4",
-          sliderInput(
-            inputId = "pass4",
-            "Task 4 Successes",
-            min = 0,
-            max = 50,
-            value = 10,
-            ticks = FALSE
-          )
-        ),
+        #enter in loop-created task sliders
+        uiOutput("task_sliders"),
         
-        #task 5 passed input (conditional)
-        conditionalPanel(
-          condition = "input.task_num >= 5",
-          sliderInput(
-            inputId = "pass5",
-            "Task 5 Successes",
-            min = 0,
-            max = 50,
-            value = 10,
-            ticks = FALSE
-          )
-        ),
         
-        #task 6 passed input (conditional)
-        conditionalPanel(
-          condition = "input.task_num >= 6",
-          sliderInput(
-            inputId = "pass6",
-            "Task 6 Successes",
-            min = 0,
-            max = 50,
-            value = 10,
-            ticks = FALSE
-          )
-        ),
-        
-        #task 7 passed input (conditional)
-        conditionalPanel(
-          condition = "input.task_num >= 7",
-          sliderInput(
-            inputId = "pass7",
-            "Task 7 Successes",
-            min = 0,
-            max = 50,
-            value = 10,
-            ticks = FALSE
-          )
-        ),
-        
-        #task 8 passed input (conditional)
-        conditionalPanel(
-          condition = "input.task_num >= 8",
-          sliderInput(
-            inputId = "pass8",
-            "Task 8 Successes",
-            min = 0,
-            max = 50,
-            value = 10,
-            ticks = FALSE
-          )
-        ),
         
         #advanced panel open -----
         prettySwitch(
@@ -203,12 +107,12 @@ ui <- fluidPage(
     #end sidebar
     
     
-    #main panel-----
+        #main panel-----
     
     # Show a plot of the generated distribution ----
     column(
       8,
-      
+      tableOutput("test_table"),
       #show main graph
       plotOutput("plot"),
       
@@ -393,96 +297,62 @@ ui <- fluidPage(
           
           
           
-          #change slider end points -----
-          observe({
-            val <- input$total
-            # Control the value, min, max, and step on range of task completion
-            # Step size is 2 when input value is even; 1 when value is odd.
-            updateSliderInput(session, "pass1", max = val)
-            updateSliderInput(session, "pass2", max = val)
-            updateSliderInput(session, "pass3", max = val)
-            updateSliderInput(session, "pass4", max = val)
-            updateSliderInput(session, "pass5", max = val)
-            updateSliderInput(session, "pass6", max = val)
-            updateSliderInput(session, "pass7", max = val)
-            updateSliderInput(session, "pass8", max = val)
+          
+          #generate task success sliders ------
+          output$task_sliders <- renderUI({
+            task_num_total <- as.integer(input$task_num)
+            lapply(1:task_num_total, function(i) {
+              sliderInput(
+                inputId = paste("pass",i,sep=""),
+                label = paste("Task ",i," successes"),
+                min = 0,
+                max = input$total,
+                value = input$total,
+                step = 1,
+                ticks = FALSE
+              )
+            })
           })
           
+         
+          
+          df_test <- reactive({
+           
+            out = NULL
+            
+            for (i in 1:input$task_num) {
+              
+              pass <- unlist(eval(parse(text = (paste0("input$pass",i)))))
+              task <- i
+              c <- data.frame(pass,task)
+              out=rbind(out,c)
+              
+            }
+            
+            out
+            
+          })
+          output$test_table <- renderTable({
+            df_test() -> test_table
+          })
           
           #build df for all plots/tables -----
           df <- reactive({
-            if (input$task_num == 8) {
-              pass <-
-                c(
-                  input$pass1,
-                  input$pass2,
-                  input$pass3,
-                  input$pass4,
-                  input$pass5,
-                  input$pass6,
-                  input$pass7,
-                  input$pass8
-                )
-              task <- c(1:8)
-              df_t <- data.frame(pass, task)
+            out = NULL
+            
+            for (i in 1:input$task_num) {
               
-            } else if (input$task_num == 7) {
-              pass <-
-                c(
-                  input$pass1,
-                  input$pass2,
-                  input$pass3,
-                  input$pass4,
-                  input$pass5,
-                  input$pass6,
-                  input$pass7
-                )
-              task <- c(1:7)
-              df_t <- data.frame(pass, task)
-              
-            } else if (input$task_num == 6) {
-              pass <-
-                c(input$pass1,
-                  input$pass2,
-                  input$pass3,
-                  input$pass4,
-                  input$pass5,
-                  input$pass6)
-              task <- c(1:6)
-              df_t <- data.frame(pass, task)
-              
-            } else if (input$task_num == 5) {
-              pass <-
-                c(input$pass1,
-                  input$pass2,
-                  input$pass3,
-                  input$pass4,
-                  input$pass5)
-              task <- c(1:5)
-              df_t <- data.frame(pass, task)
-              
-            } else if (input$task_num == 4) {
-              pass <- c(input$pass1, input$pass2, input$pass3, input$pass4)
-              task <- c(1:4)
-              df_t <- data.frame(pass, task)
-              
-            } else if (input$task_num == 3) {
-              pass <- c(input$pass1, input$pass2, input$pass3)
-              task <- c(1:3)
-              df_t <- data.frame(pass, task)
-              
-            } else if (input$task_num == 2) {
-              pass <- c(input$pass1, input$pass2)
-              task <- c(1:2)
-              df_t <- data.frame(pass, task)
-              
-            } else {
-              pass <- c(input$pass1)
-              task <- c(1)
-              df_t <- data.frame(pass, task)
+              pass <- unlist(eval(parse(text = (paste0("input$pass",i)))))
+              task <- i
+              c <- data.frame(pass,task)
+              out=rbind(out,c)
               
               
             }
+            
+            out -> df_t
+              
+            
             
             #get zval as numeric
             zval <- as.numeric(input$zval)
