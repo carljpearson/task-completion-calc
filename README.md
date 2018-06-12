@@ -19,7 +19,7 @@ First you can specify the amount of tasks you are testing (from 1 to 8), and the
 
 The default selection for **confidence levels** is 95%, which uses a z-equivalent of 1.96 is all the subsequent calculations. Other options range from 80% to 99%. This selection is mainy used to calculate the confidence intervals (which are always calculated based on the LaPlace point estimate). 
 
-The default selection for **point estimate** method is LaPlace. This method leads to more generalizable point estimates in small sample sizes, especially when all or no participants succeed, as many researchers find it unpalatable to say "we expect 100% of users to pass"). The formula is as follows to get the point estimate proportion `(x+1)/(n+2)`. The other option, if you truly want to see the exact observed proportions is to use the Exact option. This option changes the eventual plot bars to the exact observed proportions (10 of 10 users succeeding means 100%), but still keeps an overlay of the LaPlace method in the form of a dot.
+The default selection for **point estimate** method is LaPlace. This method leads to more generalizable point estimates in small sample sizes, especially when all or no participants succeed, as many researchers find it unpalatable to say "we expect 100% of users to pass"). The formula is as follows to get the point estimate proportion `(successes+1)/(total+2)`. The other option, if you truly want to see the exact observed proportions is to use the Exact option, where the formula is simply `successes/total`. This option changes the eventual plot bars to the exact observed proportions (10 of 10 users succeeding means 100%), but still keeps an overlay of the LaPlace method in the form of a dot.
 
 ## Outputs main panel
 
