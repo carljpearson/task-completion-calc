@@ -16,8 +16,6 @@ ui <- fluidPage(
   # Application title
   titlePanel("Task Completion Calculator"),
   
-  
-  
   #side panel -----
   column(
     4,
@@ -42,7 +40,7 @@ ui <- fluidPage(
         numericInput(
           inputId = "total",
           "Number of users tested",
-          min = 1,
+          min = 2,
           max = 50,
           value = 10
         )
@@ -274,14 +272,14 @@ ui <- fluidPage(
                 4,
                 
                 
-                #plot advanved options open -----
+                #plot advanced options open -----
                 prettySwitch(
                   inputId = "dl_adv",
-                  label = "Download options",
+                  label = "View download options",
                   status = "primary",
                   slim = TRUE
                 ),
-                
+                br(),
                 #download button
                 conditionalPanel(
                   condition = "output.dl_adv_out",
@@ -290,7 +288,7 @@ ui <- fluidPage(
                 
                 ),
               
-                
+                br(),
                 #options
                 conditionalPanel(
                   condition = "output.dl_adv_out",
@@ -314,7 +312,7 @@ ui <- fluidPage(
               
               
               column(
-                8,
+                5,
                 #for text options and output
                 
                 #toggle text
@@ -323,11 +321,21 @@ ui <- fluidPage(
                   label = "View graph descriptions",
                   status = "primary",
                   slim = TRUE
-                ),
+                )
+              ),
+              
+              column(3,
                 
-                #text output
-                conditionalPanel(condition = "output.text_out",
-                                 tableOutput("text"))
+                
+                #toggle table
+                prettySwitch(
+                  inputId = "table_view",
+                  label = "View data table",
+                  status = "primary",
+                  slim=TRUE
+                )
+                
+                
                 
               )
     ),
@@ -337,20 +345,17 @@ ui <- fluidPage(
              column(
                8,
                #for datatable options and output
-               #toggle table
-               prettySwitch(
-                 inputId = "table_view",
-                 label = "View data table",
-                 status = "primary",
-                 slim=TRUE
-               ),
-               
+              
                #show datatable
                conditionalPanel(
                  condition = "output.table_out",
                  h4("Data used to produce graph"),
                  tableOutput("table")
-               )
+               ),
+               
+               #text output
+               conditionalPanel(condition = "output.text_out",
+                                tableOutput("text"))
              ) #end table col),
              
     )
@@ -641,7 +646,7 @@ server <- function(input, output, session) {
         )) +
         scale_fill_manual(values = pal) +
         coord_cartesian(ylim = c(0, 1)) +
-        geom_abline(intercept=.78,slope=0, color = "gray",linetype = 2, size=2)+
+        geom_abline(intercept=.78,slope=0, color = "lightgray",linetype = 2, size=2)+
         scale_y_continuous(labels = scales::percent) +
         guides(fill = FALSE) +
         theme_minimal() +
@@ -664,11 +669,11 @@ server <- function(input, output, session) {
           ymin = lowerci,
           ymax = upperci,
           width = .2
-        )) +
+        ),color="#3d3d3d") +
         scale_fill_manual(values = pal) +
         coord_cartesian(ylim = c(0, 1)) +
         geom_abline(intercept=.78,slope=0, color = "gray", linetype = 2, size=2)+
-        geom_point(aes(y=laplace),size=8) +
+        geom_point(aes(y=laplace),size=8,color="#3d3d3d") +
         scale_y_continuous(labels = scales::percent) +
         guides(fill = FALSE) +
         theme_minimal() +
@@ -678,7 +683,7 @@ server <- function(input, output, session) {
           subtitle = paste(
             "Confidence Intervals at",
             zp,
-            "and black points indicate statistical best estimates"
+            "and points indicate statistical best estimates"
           )
         ) +
         theme(
@@ -697,10 +702,10 @@ server <- function(input, output, session) {
           ymin = lowerci,
           ymax = upperci,
           width = .2
-        )) +
+        ),color="#3d3d3d") +
         scale_fill_manual(values = pal) +
         coord_cartesian(ylim = c(0, 1)) +
-        geom_point(aes(y=laplace),size=8) +
+        geom_point(aes(y=laplace),size=8,color="#3d3d3d") +
         scale_y_continuous(labels = scales::percent) +
         guides(fill = FALSE) +
         theme_minimal() +
@@ -710,7 +715,7 @@ server <- function(input, output, session) {
           subtitle = paste(
             "Confidence Intervals at",
             zp,
-            "and black points indicate statistical best estimates"
+            "and points indicate statistical best estimates"
           )
         ) +
         theme(
@@ -744,7 +749,7 @@ server <- function(input, output, session) {
         select(
           "Task" = task,
           "Exact Proportion" = prop,
-          "LaPlace Proportion" = laplace,
+          "LaPlace Statitistical Proportion" = laplace,
           "Lower CI" = lowerci,
           "Upper CI" = upperci
         ) -> df_t
