@@ -216,7 +216,7 @@ ui <- fluidPage(
     
     fluidRow(#plot options
       
-      column(8,
+      column(5,
              
              #plot advanved options open -----
              prettySwitch(
@@ -228,7 +228,7 @@ ui <- fluidPage(
              
              
              
-             column(5,
+             
                     conditionalPanel(
                       condition = "output.plot_adv_out",
                       p("Add benchmark line:")
@@ -239,15 +239,12 @@ ui <- fluidPage(
                       switchInput(
                         inputId = "abline"
                       )
-                    )
-             ),
+                    ),
+             
              
              #color chooser
              
-             column(4,
-                    
-                    
-                    
+            
                     conditionalPanel(
                       condition = "output.plot_adv_out",
                       selectizeInput(
@@ -266,33 +263,34 @@ ui <- fluidPage(
                         selected = "rh"
                       )
                     )
-             )
              
-      )
-    ), #end plot options row
+             
+      ),
     
-    hr(),
-    fluidRow( #dl fluid row ------
               
               
               
               column(
-                3,
-                #download button
-                downloadButton("download", 
-                               "Download Plot"),
-                br(), br(),
+                4,
+                
+                
                 #plot advanved options open -----
                 prettySwitch(
                   inputId = "dl_adv",
                   label = "Download options",
                   status = "primary",
                   slim = TRUE
-                )   
+                ),
                 
-              ), #end dl col) #dl fluid row end
-              column(
-                4,
+                #download button
+                conditionalPanel(
+                  condition = "output.dl_adv_out",
+                downloadButton("download", 
+                               "Download Plot")
+                
+                ),
+              
+                
                 #options
                 conditionalPanel(
                   condition = "output.dl_adv_out",
