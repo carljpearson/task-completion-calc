@@ -1,5 +1,5 @@
 # Task Comepletion Calculator
-## Made for Red Hat UXD, but free to use and copy with attribution
+#### Made for Red Hat UXD, but free to use and copy with attribution
 
 [Hosted here live](https://rh-uxd.shinyapps.io/shiny_task/)
 
