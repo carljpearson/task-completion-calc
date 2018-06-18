@@ -9,6 +9,7 @@ library(shinyWidgets)
 library(tidyverse)
 library(wesanderson)
 library(RColorBrewer)
+library(plotly)
 
 
 # Define UI for application that draws a histogram
@@ -208,7 +209,7 @@ ui <- fluidPage(
     8,
     
     #show main graph
-    plotOutput("plot"),
+    plotlyOutput("plot"),
     
     hr(),
     
@@ -302,7 +303,10 @@ ui <- fluidPage(
                 )
               ) #end dl col) #dl fluid row end
               
+      
               
+      
+      
               
     ), #end dl fluid flow
     hr(),
@@ -731,8 +735,9 @@ server <- function(input, output, session) {
   
   
   #plot output -----
-  output$plot <- renderPlot({
-    print(plotInput())
+  output$plot <- renderPlotly({
+    p <- plotInput()
+    ggplotly(p) -> p
   })
   
   
