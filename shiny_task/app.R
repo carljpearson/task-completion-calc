@@ -256,6 +256,46 @@ ui <- fluidPage(
     
               
               
+<<<<<<< HEAD
+=======
+              
+              column(
+                4,
+                
+                
+                #plot advanced options open -----
+                prettySwitch(
+                  inputId = "dl_adv",
+                  label = "Download options",
+                  status = "primary",
+                  slim = TRUE
+                ),
+                
+                #download button
+                conditionalPanel(
+                  condition = "output.dl_adv_out",
+                downloadButton("download", 
+                               "Download Plot")
+                
+                ),
+              
+                
+                #options
+                conditionalPanel(
+                  condition = "output.dl_adv_out",
+                  radioGroupButtons(
+                    inputId = "bg",
+                    label = "Background:",
+                    choices = c("Transparent", 
+                                "White"),
+                    justified = TRUE
+                  )
+                )
+              ) #end dl col) #dl fluid row end
+              
+              
+              
+>>>>>>> c64173f5c93887d812e06c4d34365536c02786ac
     ), #end dl fluid flow
     hr(),
     
@@ -588,6 +628,7 @@ server <- function(input, output, session) {
       
       
     } else if (input$point_est == "LaPlace" & input$abline == TRUE) {
+<<<<<<< HEAD
       
       plot <- df_p %>% #get df
         plot_ly(x = ~task, #x is task variable
@@ -629,10 +670,36 @@ server <- function(input, output, session) {
                                      color="gray"
                                     )
                           )
+=======
+      df_p %>%
+        ggplot(aes(x = task, y = laplace)) +
+        geom_bar(aes(fill = task), stat = "identity") +
+        geom_errorbar(aes(
+          ymin = lowerci,
+          ymax = upperci,
+          width = .2
+        )) +
+        scale_fill_manual(values = pal) +
+        coord_cartesian(ylim = c(0, 1)) +
+        geom_abline(intercept=.78,slope=0, color = "lightgray",linetype = 2, size=2)+
+        scale_y_continuous(labels = scales::percent) +
+        guides(fill = FALSE) +
+        theme_minimal() +
+        labs(x = "Task", y = "Success rate proportion") +
+        ggtitle(label = "Estimates of success rate by task",
+                subtitle = paste("Confidence Intervals at", zp)) +
+        theme(
+          axis.text.x = element_text(size = 15),
+          axis.text.y = element_text(size = 15),
+          axis.title.x = element_text(size = 15),
+          axis.title.y = element_text(size = 15),
+          title = element_text(size = 18)
+>>>>>>> c64173f5c93887d812e06c4d34365536c02786ac
         )
       
     } else if (input$point_est == "Exact" & input$abline == TRUE ) {
       
+<<<<<<< HEAD
       plot <- df_p %>% #get df
         plot_ly(x = ~task, #x is task variable
                 y = ~prop, #y is laplace est
@@ -685,10 +752,43 @@ server <- function(input, output, session) {
                                      color="gray"
                            )
                )
+=======
+      df_p %>%
+        ggplot(aes(x = task, y = prop)) +
+        geom_bar(aes(fill = task), stat = "identity") +
+        geom_errorbar(aes(
+          ymin = lowerci,
+          ymax = upperci,
+          width = .2
+        ),color="gray") +
+        scale_fill_manual(values = pal) +
+        coord_cartesian(ylim = c(0, 1)) +
+        geom_abline(intercept=.78,slope=0, color = "lightgray", linetype = 2, size=2)+
+        geom_point(aes(y=laplace),size=8,color="gray") +
+        scale_y_continuous(labels = scales::percent) +
+        guides(fill = FALSE) +
+        theme_minimal() +
+        labs(x = "Task", y = "Success rate proportion") +
+        ggtitle(
+          label = "Exact observered proportions",
+          subtitle = paste(
+            "Confidence Intervals at",
+            zp,
+            "and points indicate statistical best estimates"
+          )
+        ) +
+        theme(
+          axis.text.x = element_text(size = 15),
+          axis.text.y = element_text(size = 15),
+          axis.title.x = element_text(size = 15),
+          axis.title.y = element_text(size = 15),
+          title = element_text(size = 18)
+>>>>>>> c64173f5c93887d812e06c4d34365536c02786ac
         )
       
       
     } else {
+<<<<<<< HEAD
       
       plot <- df_p %>% #get df
         plot_ly(x = ~task, #x is task variable
@@ -731,6 +831,37 @@ server <- function(input, output, session) {
                ),
                xaxis = list(title = "Task" #retitle x axis
                )
+=======
+      df_p %>%
+        ggplot(aes(x = task, y = prop)) +
+        geom_bar(aes(fill = task), stat = "identity") +
+        geom_errorbar(aes(
+          ymin = lowerci,
+          ymax = upperci,
+          width = .2
+        ),color="gray") +
+        scale_fill_manual(values = pal) +
+        coord_cartesian(ylim = c(0, 1)) +
+        geom_point(aes(y=laplace),size=8,color="gray") +
+        scale_y_continuous(labels = scales::percent) +
+        guides(fill = FALSE) +
+        theme_minimal() +
+        labs(x = "Task", y = "Success rate proportion") +
+        ggtitle(
+          label = "Exact observered proportions",
+          subtitle = paste(
+            "Confidence Intervals at",
+            zp,
+            "and points indicate statistical best estimates"
+          )
+        ) +
+        theme(
+          axis.text.x = element_text(size = 15),
+          axis.text.y = element_text(size = 15),
+          axis.title.x = element_text(size = 15),
+          axis.title.y = element_text(size = 15),
+          title = element_text(size = 18)
+>>>>>>> c64173f5c93887d812e06c4d34365536c02786ac
         )
       
       
