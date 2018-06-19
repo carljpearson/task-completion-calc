@@ -9,6 +9,8 @@ This shiny app was made to plot and calculate basic statistics around task compl
 
 A lot of inspiration is derived from [MeasuringU's calculator](https://measuringu.com/wald/). This goal for my instance was to simplify some of the choices and graph the output. Additional, much of the theory and calcuations are derived from Quantifying the User Experience by Suaro and Lewis.
 
+I originally built this in ggplot2 but have made it completely with the plotly package for R, as the interactivity can be nice and it is a touch faster. Plus, download functions are now integrated into the canvas object.
+
   ### Future
   
 This app is not "complete" necessarily. If you think an essential and common feature is missing, please let me know. Also, formatting specifics continue to be a challenge in the shiny framework, so please comment around visual issues but know I may already be trying to resolve them. Finally, if anyone wants to help me run this on an instance of OpenShift, please let me know!!
@@ -33,17 +35,18 @@ The default selection for **point estimate** method is LaPlace. This method lead
   
 This plot graphs all of the tasks, which each bar representing a completion rate in percentage. Labels will update based on chosen point estimates and confidence levels.
 
+  ##### Hover text
+  
+The hover text shows the LaPlace estimate, the actual observed proportion, and then the best conservative estimation (Plausible failure rate). This last piece takes the lowest confidence interval, and then subtracts the percentage from 100 to give a conservative perspective.
+
   ##### Confidence intervals
   
 Confidence intervals are always calculated based around on the LaPLace method point estimate, to maximize statistical generalizability. The intervals themselves are created through the [Adjusted Wald method](http://journals.sagepub.com/doi/abs/10.3102/1076998611411915?journalCode=jebb), which tends to show superior coverage accuracy on discrete variables with samples of less than 100. 
 
   #### View plot options
   
-This switch shows the options for **benchmark line** and **color palette chooser**. The benchmark line puts a consistent horizontal line at 78%, based on a broad set of data from [MeasuringU](https://measuringu.com/task-completion/) that describes a typical completion rate to aim for. The color palette chooser has a default selection using [Red Hat brand colors](https://brand.redhat.com/elements/color/). Other options include an assortment from the [wesanderson](https://cran.r-project.org/web/packages/wesanderson/index.html) and alternating gray scale dual tones. 
+This switch shows the options for **benchmark line** and **color palette chooser**. The benchmark line puts a consistent horizontal line at 78%, based on a broad set of data from [MeasuringU](https://measuringu.com/task-completion/) that describes a typical completion rate to aim for. The color palette chooser has a default selection using [Red Hat brand colors](https://brand.redhat.com/elements/color/), a color-blind friendly palette from RColorBRewer, and alternating gray scale dual tones. 
 
-  #### View download options
-  
-This switch shows the **Download** button, which allows the user to download a 5" x 7" PNG file. Currently, the only additional option is **Background**, which lets the user choose a transparent background or a solid white background on the PNG.
 
   #### View graph descriptions
   
