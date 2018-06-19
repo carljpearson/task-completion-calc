@@ -214,15 +214,9 @@ ui <- fluidPage(
     
     fluidRow(#plot options
       
-      column(5,
+      column(4,
              
-             #plot advanved options open -----
-             prettySwitch(
-               inputId = "plot_adv",
-               label = "View plot options",
-               status = "primary",
-               slim = TRUE
-             ),
+            
              
              
              
@@ -237,11 +231,11 @@ ui <- fluidPage(
                       switchInput(
                         inputId = "abline"
                       )
-                    ),
-             
+                    )
+              ),
              
              #color chooser
-             
+             column(4, 
             
                     conditionalPanel(
                       condition = "output.plot_adv_out",
@@ -258,49 +252,9 @@ ui <- fluidPage(
                     )
              
              
-      ),
+      )
     
               
-              
-              
-              column(
-                4,
-                
-                
-                #plot advanced options open -----
-                prettySwitch(
-                  inputId = "dl_adv",
-                  label = "View download options",
-                  status = "primary",
-                  slim = TRUE
-                ),
-                br(),
-                #download button
-                conditionalPanel(
-                  condition = "output.dl_adv_out",
-                downloadButton("download", 
-                               "Download Plot")
-                
-                ),
-              
-                br(),
-                #options
-                conditionalPanel(
-                  condition = "output.dl_adv_out",
-                  radioGroupButtons(
-                    inputId = "bg",
-                    label = "Background:",
-                    choices = c("Transparent", 
-                                "White"),
-                    justified = TRUE
-                  )
-                )
-              ) #end dl col) #dl fluid row end
-              
-      
-              
-      
-      
               
     ), #end dl fluid flow
     hr(),
@@ -549,14 +503,14 @@ server <- function(input, output, session) {
     } else {
       
       c(
-        "#808080",
-        "#2a2a2a",
-        "#808080",
-        "#2a2a2a",
-        "#808080",
-        "#2a2a2a",
-        "#808080",
-        "#2a2a2a"
+        "#dbdbdb",
+        "#3f3f3f",
+        "#dbdbdb",
+        "#3f3f3f",
+        "#dbdbdb",
+        "#3f3f3f",
+        "#dbdbdb",
+        "#3f3f3f"
       ) -> colpal
       
     }
@@ -598,141 +552,187 @@ server <- function(input, output, session) {
     
     
     if (input$point_est == "LaPlace" & input$abline == FALSE) {
-      plot <- df_p %>% 
-        plot_ly(x = ~task,
-                y = ~laplace,
-                type = "bar",
-                hoverinfo = 'text',
-                text = ~paste0(
+     
+     
+      plot <- df_p %>% #get df
+        plot_ly(x = ~task, #x is task variable
+                y = ~laplace, #y is laplace est
+                type = "bar", #it's a bar graph
+                hoverinfo = 'text', #define var name for tooltip formatting
+                text = ~paste0( #tool tip formatting
                   'Task: ', task,
-                  '<br> Success rate estimate: ', ( 100*round(laplace,2)),"%",
-                  '<br> Observed success rate: ',(100*(round(prop,2))),"%",
-                  '<br> Plausible failure rate: ',(100*(1-round(lowerci,2))),"%"
+                  '<br> Success rate estimate: ', ( 100*round(laplace,2)),"%", #laplace rounded
+                  '<br> Observed success rate: ',(100*(round(prop,2))),"%",    #actual proportion 
+                  '<br> Plausible failure rate: ',(100*(1-round(lowerci,2))),"%" #lower CI subtracted from 1
                   
                 ),
-                error_y = list(type = "data",
-                               symmetric = FALSE,
-                               array = ~upperci_plotly,
-                               arrayminus = ~lowerci_plotly,
-                               color = "black"
-                  
-                              ),
-                color = ~task,
-                colors = pal
+                error_y = list(type = "data", #starting error bar
+                               symmetric = FALSE, #upper and lower bars are different
+                               array = ~upperci_plotly, #special variable as plotly needs to add based on y val
+                               arrayminus = ~lowerci_plotly, #special variable as plotly needs to add based on y val
+                               color = "black" 
+                ),
+                color = ~task, #bar color 
+                colors = pal   #palettle to draw from
         ) %>%
-       # add_segments(x = 1, xend = as.numeric(input$task_num), y = .78, yend = .78) %>%
-        layout(title = "Success rates by task",
-               yaxis = list(tickformat = "%",
-                            range = c(0,1.01),
-                            tickvals = c(.2,.4,.6,.8,1),
-                            title = "Success Rate"
+        layout(title = paste0("Success Rates by Task ", "(Confidence at ",zp,")"), #title that includes z value for conf
+               yaxis = list(tickformat = "%", #convert y axis to %
+                            range = c(0,1.01), #specify y range, 1.01 because tick doesn't appear otherwise
+                            tickvals = c(.2,.4,.6,.8,1), #specify ticks
+                            title = "Success Rate" #retitle y
                ),
-               xaxis = list(title = "Task"
-               ),
-               shapes=list(type='line', 
-                           y0 = 0.78, 
-                           y1 = 0.78,
-                           xref = "paper",
-                           x0 = 0,
-                           x1 = as.formula("~input$task_num - 1"), 
-                           line=list(dash='dot', 
-                                     width=3,
-                                     color="gray"
-                                     )
-                           )
+               xaxis = list(title = "Task" #retitle x axis
+               )
         )
+      
       
       
     } else if (input$point_est == "LaPlace" & input$abline == TRUE) {
-      df_p %>%
-        ggplot(aes(x = task, y = laplace)) +
-        geom_bar(aes(fill = task), stat = "identity") +
-        geom_errorbar(aes(
-          ymin = lowerci,
-          ymax = upperci,
-          width = .2
-        )) +
-        scale_fill_manual(values = pal) +
-        coord_cartesian(ylim = c(0, 1)) +
-        geom_abline(intercept=.78,slope=0, color = "lightgray",linetype = 2, size=2)+
-        scale_y_continuous(labels = scales::percent) +
-        guides(fill = FALSE) +
-        theme_minimal() +
-        labs(x = "Task", y = "Success rate proportion") +
-        ggtitle(label = "Estimates of success rate by task",
-                subtitle = paste("Confidence Intervals at", zp)) +
-        theme(
-          axis.text.x = element_text(size = 15),
-          axis.text.y = element_text(size = 15),
-          axis.title.x = element_text(size = 15),
-          axis.title.y = element_text(size = 15),
-          title = element_text(size = 18)
+      
+      plot <- df_p %>% #get df
+        plot_ly(x = ~task, #x is task variable
+                y = ~laplace, #y is laplace est
+                type = "bar", #it's a bar graph
+                hoverinfo = 'text', #define var name for tooltip formatting
+                text = ~paste0( #tool tip formatting
+                  'Task: ', task,
+                  '<br> Success rate estimate: ', ( 100*round(laplace,2)),"%", #laplace rounded
+                  '<br> Observed success rate: ',(100*(round(prop,2))),"%",    #actual proportion 
+                  '<br> Plausible failure rate: ',(100*(1-round(lowerci,2))),"%" #lower CI subtracted from 1
+                  
+                ),
+                error_y = list(type = "data", #starting error bar
+                               symmetric = FALSE, #upper and lower bars are different
+                               array = ~upperci_plotly, #special variable as plotly needs to add based on y val
+                               arrayminus = ~lowerci_plotly, #special variable as plotly needs to add based on y val
+                               color = "black" 
+                ),
+                color = ~task, #bar color 
+                colors = pal   #palettle to draw from
+        ) %>%
+        layout(title = paste0("Success Rates by Task ", "(Confidence at ",zp,")"), #title that includes z value for conf
+               yaxis = list(tickformat = "%", #convert y axis to %
+                            range = c(0,1.01), #specify y range, 1.01 because tick doesn't appear otherwise
+                            tickvals = c(.2,.4,.6,.8,1), #specify ticks
+                            title = "Success Rate" #retitle y
+               ),
+               xaxis = list(title = "Task" #retitle x axis
+               ),
+               shapes=list(type='line', #horizontal line
+                           y0 = 0.78,   #y height
+                           y1 = 0.78,   #y height
+                           xref = "paper", #unsure, I think this makes it not stop at bar center
+                           x0 = 0, #starting beyond the left
+                           x1 = 1, #working, unsure how this fits with paper argument right now though
+                           line=list(dash='dot', #dotted line
+                                     width=3,
+                                     color="gray"
+                                    )
+                          )
         )
+      
     } else if (input$point_est == "Exact" & input$abline == TRUE ) {
       
-      df_p %>%
-        ggplot(aes(x = task, y = prop)) +
-        geom_bar(aes(fill = task), stat = "identity") +
-        geom_errorbar(aes(
-          ymin = lowerci,
-          ymax = upperci,
-          width = .2
-        ),color="#3d3d3d") +
-        scale_fill_manual(values = pal) +
-        coord_cartesian(ylim = c(0, 1)) +
-        geom_abline(intercept=.78,slope=0, color = "gray", linetype = 2, size=2)+
-        geom_point(aes(y=laplace),size=8,color="#3d3d3d") +
-        scale_y_continuous(labels = scales::percent) +
-        guides(fill = FALSE) +
-        theme_minimal() +
-        labs(x = "Task", y = "Success rate proportion") +
-        ggtitle(
-          label = "Exact observered proportions",
-          subtitle = paste(
-            "Confidence Intervals at",
-            zp,
-            "and points indicate statistical best estimates"
-          )
-        ) +
-        theme(
-          axis.text.x = element_text(size = 15),
-          axis.text.y = element_text(size = 15),
-          axis.title.x = element_text(size = 15),
-          axis.title.y = element_text(size = 15),
-          title = element_text(size = 18)
+      plot <- df_p %>% #get df
+        plot_ly(x = ~task, #x is task variable
+                y = ~prop, #y is laplace est
+                type = "bar", #it's a bar graph
+                hoverinfo = 'text', #define var name for tooltip formatting
+                text = ~paste0( #tool tip formatting
+                  'Task: ', task,
+                  '<br> Success rate estimate: ', ( 100*round(laplace,2)),"%", #laplace rounded
+                  '<br> Observed success rate: ',(100*(round(prop,2))),"%",    #actual proportion 
+                  '<br> Plausible failure rate: ',(100*(1-round(lowerci,2))),"%" #lower CI subtracted from 1
+                  
+                ),
+                color = ~task, #bar color 
+                colors = pal,   #palettle to draw from
+                legendgroup = 'Exact Bars'
+        ) %>%
+        add_trace(x=~task,
+                  y=~laplace,
+                  type = "scatter",
+                  mode = "markers",
+                  marker = list(size = 10,
+                                color = "black"
+                  ),
+                  error_y = list(type = "data", #starting error bar
+                                 symmetric = FALSE, #upper and lower bars are different
+                                 array = ~upperci_plotly, #special variable as plotly needs to add based on y val
+                                 arrayminus = ~lowerci_plotly, #special variable as plotly needs to add based on y val
+                                 color = "black" 
+                  ),
+                  hoverinfo='none', #no hover on error bars and laplace
+                  legendgroup = 'LaPlace and Error Bars'
+                  
+        ) %>%
+        layout(title = paste0("Success Rates by Task ", "(Confidence at ",zp,")"), #title that includes z value for conf
+               yaxis = list(tickformat = "%", #convert y axis to %
+                            range = c(0,1.01), #specify y range, 1.01 because tick doesn't appear otherwise
+                            tickvals = c(.2,.4,.6,.8,1), #specify ticks
+                            title = "Success Rate" #retitle y
+                            ),
+               xaxis = list(title = "Task" #retitle x axis
+                            ),
+               shapes=list(type='line', #horizontal line
+                           y0 = 0.78,   #y height
+                           y1 = 0.78,   #y height
+                           xref = "paper", #unsure, I think this makes it not stop at bar center
+                           x0 = 0, #starting beyond the left
+                           x1 = 1, #working, unsure how this fits with paper argument right now though
+                           line=list(dash='dot', #dotted line
+                                     width=3,
+                                     color="gray"
+                           )
+               )
         )
       
+      
     } else {
-      df_p %>%
-        ggplot(aes(x = task, y = prop)) +
-        geom_bar(aes(fill = task), stat = "identity") +
-        geom_errorbar(aes(
-          ymin = lowerci,
-          ymax = upperci,
-          width = .2
-        ),color="#3d3d3d") +
-        scale_fill_manual(values = pal) +
-        coord_cartesian(ylim = c(0, 1)) +
-        geom_point(aes(y=laplace),size=8,color="#3d3d3d") +
-        scale_y_continuous(labels = scales::percent) +
-        guides(fill = FALSE) +
-        theme_minimal() +
-        labs(x = "Task", y = "Success rate proportion") +
-        ggtitle(
-          label = "Exact observered proportions",
-          subtitle = paste(
-            "Confidence Intervals at",
-            zp,
-            "and points indicate statistical best estimates"
-          )
-        ) +
-        theme(
-          axis.text.x = element_text(size = 15),
-          axis.text.y = element_text(size = 15),
-          axis.title.x = element_text(size = 15),
-          axis.title.y = element_text(size = 15),
-          title = element_text(size = 18)
+      
+      plot <- df_p %>% #get df
+        plot_ly(x = ~task, #x is task variable
+                y = ~prop, #y is laplace est
+                type = "bar", #it's a bar graph
+                hoverinfo = 'text', #define var name for tooltip formatting
+                text = ~paste0( #tool tip formatting
+                  'Task: ', task,
+                  '<br> Success rate estimate: ', ( 100*round(laplace,2)),"%", #laplace rounded
+                  '<br> Observed success rate: ',(100*(round(prop,2))),"%",    #actual proportion 
+                  '<br> Plausible failure rate: ',(100*(1-round(lowerci,2))),"%" #lower CI subtracted from 1
+                  
+                ),
+                color = ~task, #bar color 
+                colors = pal,   #palettle to draw from
+                legendgroup = 'Exact Bars'
+        ) %>%
+        add_trace(x=~task,
+                  y=~laplace,
+                  type = "scatter",
+                  mode = "markers",
+                  marker = list(size = 10,
+                                color = "black"
+                  ),
+                  error_y = list(type = "data", #starting error bar
+                                 symmetric = FALSE, #upper and lower bars are different
+                                 array = ~upperci_plotly, #special variable as plotly needs to add based on y val
+                                 arrayminus = ~lowerci_plotly, #special variable as plotly needs to add based on y val
+                                 color = "black" 
+                  ),
+                  hoverinfo='none', #no hover on error bars and laplace
+                  legendgroup = 'LaPlace and Error Bars'
+                  
+        ) %>%
+        layout(title = paste0("Success Rates by Task ", "(Confidence at ",zp,")"), #title that includes z value for conf
+               yaxis = list(tickformat = "%", #convert y axis to %
+                            range = c(0,1.01), #specify y range, 1.01 because tick doesn't appear otherwise
+                            tickvals = c(.2,.4,.6,.8,1), #specify ticks
+                            title = "Success Rate" #retitle y
+               ),
+               xaxis = list(title = "Task" #retitle x axis
+               )
         )
+      
       
     }#end ifelse of point est
   }) #end table render
@@ -801,29 +801,7 @@ server <- function(input, output, session) {
     
   }) #end print render
   
-  #saving plot ----
-  
-  bg_out <- reactive({
-    ifelse(input$bg == "Transparent", "transparent","white")
-  })
-  
-  
-  
-  output$download <- downloadHandler(
-    filename = function() {
-      paste("my_plot_", nrow(df()), "tasks", ".png", sep = "")
-    },
-    content = function(file) {
-      ggsave(
-        file,
-        plot = plotInput(),
-        device = "png",
-        bg =  bg_out(),
-        width = 8,
-        height = 5
-      )
-    }
-  ) #end plot saver
+
   
   
   
