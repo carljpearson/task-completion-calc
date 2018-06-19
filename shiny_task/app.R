@@ -513,8 +513,10 @@ server <- function(input, output, session) {
       mutate(adj_wald_marg =  zval * sqrt(p_adj * (1 - p_adj) / n_adj)) %>% #wald margin value
       mutate(lowerci = p_adj - adj_wald_marg) %>% #lower wald ci
       mutate(lowerci = ifelse(lowerci <= 0, 0, lowerci)) %>%
+      mutate(lowerci_plotly = laplace - lowerci) %>% #special col as plotly error bar must reference y value
       mutate(upperci = p_adj + adj_wald_marg) %>% #upper wald ci
       mutate(upperci = ifelse(upperci >= 1, 1, upperci)) %>%
+      mutate(upperci_plotly = upperci - laplace) %>% #special col as plotly error bar must reference y value
       mutate(task = as.factor(trunc(task, digits = 1))) -> df
     
     
@@ -582,7 +584,7 @@ server <- function(input, output, session) {
   #create plot object -----
   plotInput <- reactive({
     req(input$task_num)
-    
+    task_num <- input$task
     #get z percentage for name
     zp <- zp()
     
@@ -596,38 +598,49 @@ server <- function(input, output, session) {
     
     
     if (input$point_est == "LaPlace" & input$abline == FALSE) {
-      
-      
-      
       plot <- df_p %>% 
-        plot_ly(x = ~task,y = ~laplace,
+        plot_ly(x = ~task,
+                y = ~laplace,
                 type = "bar",
                 hoverinfo = 'text',
                 text = ~paste0(
-                        'Task: ', task,
-                        '<br> Success rate: ', ( 100*round(laplace,2)),"%",
-                        '<br> Plausible failure rate: ',(100*(1-round(lowerci,2))),"%"
-                              ),
-                color = ~task,
-                colors = pal,
+                  'Task: ', task,
+                  '<br> Success rate estimate: ', ( 100*round(laplace,2)),"%",
+                  '<br> Observed success rate: ',(100*(round(prop,2))),"%",
+                  '<br> Plausible failure rate: ',(100*(1-round(lowerci,2))),"%"
+                  
+                ),
                 error_y = list(type = "data",
                                symmetric = FALSE,
-                               array = ~adj_wald_marg,
-                               arrayminus = ~adj_wald_marg,
-                               color="black"
-                               ),
-                showlegend=FALSE
-                ) %>%
+                               array = ~upperci_plotly,
+                               arrayminus = ~lowerci_plotly,
+                               color = "black"
+                  
+                              ),
+                color = ~task,
+                colors = pal
+        ) %>%
+       # add_segments(x = 1, xend = as.numeric(input$task_num), y = .78, yend = .78) %>%
         layout(title = "Success rates by task",
                yaxis = list(tickformat = "%",
                             range = c(0,1.01),
                             tickvals = c(.2,.4,.6,.8,1),
                             title = "Success Rate"
-                            ),
+               ),
                xaxis = list(title = "Task"
-                            
-                            )
-               )
+               ),
+               shapes=list(type='line', 
+                           y0 = 0.78, 
+                           y1 = 0.78,
+                           xref = "paper",
+                           x0 = 0,
+                           x1 = as.formula("~input$task_num - 1"), 
+                           line=list(dash='dot', 
+                                     width=3,
+                                     color="gray"
+                                     )
+                           )
+        )
       
       
     } else if (input$point_est == "LaPlace" & input$abline == TRUE) {
@@ -739,8 +752,7 @@ server <- function(input, output, session) {
     df() -> df_t
     
     
-    #change table based on CI for bounds of exact
-    if (input$point_est == "LaPlace") {
+    
       df_t %>%
         select(
           "Task" = task,
@@ -749,17 +761,7 @@ server <- function(input, output, session) {
           "Lower CI" = lowerci,
           "Upper CI" = upperci
         ) -> df_t
-    } else {
-      df_t %>%
-        select(
-          "Task" = task,
-          "Exact Proportion" = prop,
-          "LaPlace Statitistical Proportion" = laplace,
-          "Lower CI" = lowerci,
-          "Upper CI" = upperci
-        ) -> df_t
-      
-    }
+    
     
   }) #end table render
   
