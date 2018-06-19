@@ -605,11 +605,18 @@ server <- function(input, output, session) {
                 hoverinfo = 'text',
                 text = ~paste0(
                         'Task: ', task,
-                        '<br> Success rate: ', ( 100*round(laplace,2)),"%"
+                        '<br> Success rate: ', ( 100*round(laplace,2)),"%",
+                        '<br> Plausible failure rate: ',(100*(1-round(lowerci,2))),"%"
                               ),
                 color = ~task,
-                colors = pal
-                
+                colors = pal,
+                error_y = list(type = "data",
+                               symmetric = FALSE,
+                               array = ~adj_wald_marg,
+                               arrayminus = ~adj_wald_marg,
+                               color="black"
+                               ),
+                showlegend=FALSE
                 ) %>%
         layout(title = "Success rates by task",
                yaxis = list(tickformat = "%",
