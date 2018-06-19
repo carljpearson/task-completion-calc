@@ -7,7 +7,6 @@
 library(shiny)
 library(shinyWidgets)
 library(tidyverse)
-library(wesanderson)
 library(RColorBrewer)
 library(plotly)
 
@@ -251,11 +250,6 @@ ui <- fluidPage(
                         "Choose color palette:",
                         choices = c(
                           "Red Hat Brand" = "rh",
-                          "The Life Aquatic" = "ziz",
-                          "The Grand Budapest Hotel" = "buda",
-                          "The Royal Tenenbaums" = "royal",
-                          "The Darjeeling Limited" = "dar",
-                          "Moonrise Kingdom" = "moon",
                           "Color Blind Friendly" = "color-b",
                           "Gray Alternating" = "single"
                         ),
@@ -532,6 +526,9 @@ server <- function(input, output, session) {
   #color palette generator -----
   
   colpal <- reactive({
+    
+    f <- function(pal) brewer.pal(brewer.pal.info[pal, "maxcolors"], pal)
+    
     if (input$colpal == "rh") {
       c(
         "#cc0000",
@@ -544,25 +541,11 @@ server <- function(input, output, session) {
         "#f0ab00"
       ) -> colpal
       
-    } else if (input$colpal == "ziz") {
-      wes_palette(8, name = "Zissou1", type = "continuous") -> colpal
-      
-    } else if (input$colpal == "buda") {
-      wes_palette(8, name = "GrandBudapest1", type = "continuous") -> colpal
-      
-    } else if (input$colpal == "royal") {
-      wes_palette(8, name = "Royal1", type = "continuous") -> colpal
-      
-    } else if (input$colpal == "dar") {
-      wes_palette(8, name = "Darjeeling1", type = "continuous") -> colpal
-      
-    } else if (input$colpal == "moon") {
-      wes_palette(8, name = "Moonrise1", type = "continuous") -> colpal
-      
-    }  else if (input$colpal == "color-b") {
+    } else if (input$colpal == "color-b") {
       brewer.pal(8, "Accent") -> colpal
       
     } else {
+      
       c(
         "#808080",
         "#2a2a2a",
@@ -598,15 +581,14 @@ server <- function(input, output, session) {
   })
   #create plot object -----
   plotInput <- reactive({
+    req(input$task_num)
+    
     #get z percentage for name
     zp <- zp()
     
-    
-    
-    
     #plot colors
     pal <- colpal()
-    
+    pal[1:input$task_num] -> pal
     #start plot
     
     df() -> df_p
@@ -614,29 +596,31 @@ server <- function(input, output, session) {
     
     
     if (input$point_est == "LaPlace" & input$abline == FALSE) {
-      df_p %>%
-        ggplot(aes(x = task, y = laplace)) +
-        geom_bar(aes(fill = task), stat = "identity") +
-        geom_errorbar(aes(
-          ymin = lowerci,
-          ymax = upperci,
-          width = .2
-        )) +
-        scale_fill_manual(values = pal) +
-        coord_cartesian(ylim = c(0, 1)) +
-        scale_y_continuous(labels = scales::percent) +
-        guides(fill = FALSE) +
-        theme_minimal() +
-        labs(x = "Task", y = "Success rate proportion") +
-        ggtitle(label = "Estimates of success rate by task",
-                subtitle = paste("Confidence Intervals at", zp)) +
-        theme(
-          axis.text.x = element_text(size = 15),
-          axis.text.y = element_text(size = 15),
-          axis.title.x = element_text(size = 15),
-          axis.title.y = element_text(size = 15),
-          title = element_text(size = 18)
-        )
+      
+      
+      
+      plot <- df_p %>% 
+        plot_ly(x = ~task,y = ~laplace,
+                type = "bar",
+                hoverinfo = 'text',
+                text = ~paste0(
+                        'Task: ', task,
+                        '<br> Success rate: ', ( 100*round(laplace,2)),"%"
+                              ),
+                color = ~task,
+                colors = pal
+                
+                ) %>%
+        layout(title = "Success rates by task",
+               yaxis = list(tickformat = "%",
+                            range = c(0,1.01),
+                            tickvals = c(.2,.4,.6,.8,1),
+                            title = "Success Rate"
+                            ),
+               xaxis = list(title = "Task"
+                            
+                            )
+               )
       
       
     } else if (input$point_est == "LaPlace" & input$abline == TRUE) {
@@ -737,7 +721,7 @@ server <- function(input, output, session) {
   #plot output -----
   output$plot <- renderPlotly({
     p <- plotInput()
-    ggplotly(p) -> p
+    
   })
   
   
