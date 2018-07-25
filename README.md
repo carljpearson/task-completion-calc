@@ -7,7 +7,7 @@
 
 This shiny app was made to plot and calculate basic statistics around task completion, so the language refers to tasks throughout the interface. Statistically, this calculator will function around any set of bernoulli variables (success/failure, or anything other single observation of a binary outcome).
 
-A lot of inspiration is derived from [MeasuringU's calculator](https://measuringu.com/wald/). This goal for my instance was to simplify some of the choices and graph the output. Additional, much of the theory and calcuations are derived from Quantifying the User Experience by Suaro and Lewis.
+A lot of inspiration is derived from [MeasuringU's calculator](https://measuringu.com/wald/). This goal for my instance was to simplify some of the choices and graph the output. Additionally, much of the theory and calcuations are derived from Quantifying the User Experience by Suaro and Lewis.
 
 I originally built this in ggplot2 but have made it completely with the plotly package for R, as the interactivity can be nice and it is a touch faster. Plus, download functions are now integrated into the canvas object.
 
